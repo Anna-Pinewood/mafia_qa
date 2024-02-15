@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "megashool-project"
+version = "0.1.0"
+description = ""
+authors = ["Olga Lipina <olga.lipina@tedo.ru>"]
+readme = "README.md"
+packages = [{include = "megashool_project"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+langchain = "^0.1.7"
+weaviate-client = "^4.4.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
