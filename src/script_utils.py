@@ -6,6 +6,9 @@ import sys
 
 
 def get_kwargs() -> argparse.ArgumentParser:
+    """Parse script args if run through command line.
+    Here waits for logging level param.
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -23,7 +26,7 @@ def get_kwargs() -> argparse.ArgumentParser:
 def get_logger(
         logger_name: str | None = None,
         level: int = logging.DEBUG) -> logging.Logger:
-
+    """Custom logger."""
     formatter = logging.Formatter(
         "%(levelname)-8s [%(asctime)s] %(name)s:%(lineno)d: %(message)s"
     )

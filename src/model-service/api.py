@@ -25,16 +25,24 @@ RUSSIAN_BEGIN_FOR_MODEL = ""
 async def predict(
         request: Request,
 ):
-    """
+    """Make LLM call to generate answer,
+    based on query and context, passed in request.
+
     Parameters
     ----------
-    request.json() is dict, e.g.:
-    data = {
-        'query': query,
-        ...
-        'max_tokens': max_new_tokens,
-        'temperature': temperature,
-    }
+    request: Request
+        Contains:
+         - query (str): A question to be answered.
+        - context (str): Relevant context to base the answer on.
+        - system_prompt (str): The model system prompt.
+        - context_prompt (str): The prompt which would be added in front of context.
+        - max_tokens (int): The maximum number of tokens to generate by model.
+        - temperature (float): The temperature parameter for text generation.
+
+    Returns:
+    -------
+    dict
+        Answer key contains model generated answer.
     """
     LOGGER.info("\n\nGot request")
     data = await request.json()
@@ -43,8 +51,8 @@ async def predict(
     context = data.get("context")
     system_prompt = data.get("system_prompt")
     context_prompt = data.get("context_prompt")
-    max_tokens = data.get("max_tokens")
-    temperature = data.get("temperature")
+    max_tokens = int(data.get("max_tokens"))
+    temperature = float(data.get("temperature"))
 
     messages = get_messages(question=query,
                             context=context,
@@ -85,6 +93,7 @@ async def predict(
 
 @app.get('/healthcheck')
 async def healthcheck():
+    """Check if service is available."""
     current_time = datetime.now()
     msg = (f"Hey, hey! "
            f"I am LLM service and I've been alive for {current_time - launch_time} now.\n")
@@ -97,6 +106,15 @@ def get_messages(question: str | None = None,
                  system_prompt: str | None = None,
                  context_prompt: str | None = None
                  ) -> list[dict[str, str]]:
+    """Helper to prepare messages to the model.
+
+    Returns
+    -------
+    list[dict[str, str]]
+        List of system and users' messages,
+        conteaining sustem instructions
+        and user context and query.
+    """
 
     history = []
     if system_prompt is not None:

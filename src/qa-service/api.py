@@ -1,5 +1,6 @@
 """QA service to answer questions."""
 import json
+from ast import literal_eval
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
@@ -7,19 +8,16 @@ from pathlib import Path
 import requests
 import uvicorn
 import yaml
-from fastapi import FastAPI, Request, UploadFile
-from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+from fastapi import FastAPI, Request
 from langchain.schema.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from ast import literal_eval
-
+from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 
 from consts import (CONTEXT_PROMPT, EMBEDDINGS_MODEL_NAME, FAISS_INDEX_PATH,
                     MAX_TOKENS_ANSWER, MODEL_URL, SYSTEM_PROMPT, TEMPERATURE,
                     TOP_K_DOCUMENTS)
 from script_utils import get_kwargs, get_logger
-from init_db import prepare_splits
 
 app = FastAPI(
     title=("MAFIA QA assistant api."),
@@ -40,6 +38,23 @@ async def call_model(
         max_new_tokens: int = MAX_TOKENS_ANSWER,
         temperature: float = TEMPERATURE,
 ) -> str:
+    """Send query to LLM service.
+
+    Parameters
+    ----------
+    query: str
+        User question.
+    context: str | None
+        Context if present.
+    system_prompt: str| None
+        Model sustem prompt.
+    context_prompt: str | None
+        Prompt to add in fromt of context.
+    max_new_tokens: int
+        Max tokens to generate.
+    temperature: float
+        Model temperature.
+    """
     data = {
         'query': query,
         'context': context,
@@ -59,6 +74,13 @@ async def call_model(
 async def answer(
         request: Request,
 ):
+    """Collect context and call model
+    to make an answer.
+    Parameters
+    ----------
+    request : Request
+        Must contain 'query' field.
+    """
 
     ip_user = request.client.host
     LOGGER.info("Received POST request to /answer from IP: %s",
@@ -88,6 +110,22 @@ async def answer(
 async def load_documents(
         request: Request,
 ):
+    """Load new text to vector db
+    and save updated db.
+
+    Parameters
+    ----------
+    request : Request
+        Must contain "documents" value
+        with list of texts to upload.
+
+    Example usage:
+    ```
+    documents = ['New data 1', 'New data 2']
+    data = {'documents': str(documents)}
+    response = requests.post(url, json=data, timeout=1000)
+    ```
+    """
 
     ip_user = request.client.host
     LOGGER.info("Received POST request to /load_document from IP: %s",
@@ -103,7 +141,7 @@ async def load_documents(
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000, chunk_overlap=200)
     splits = text_splitter.split_documents(documents_langchain)
-    
+
     new_vectorstore = FAISS.from_documents(documents=splits,
                                            embedding=embeddings)
     vectorstore.merge_from(new_vectorstore)
@@ -119,6 +157,7 @@ async def load_documents(
 
 @app.get('/healthcheck')
 async def healthcheck():
+    """Check if service is available."""
     current_time = datetime.now()
     msg = (f"Hey, hey! "
            f"I am QA service and "
