@@ -15,3 +15,11 @@ poetry install --with model
 poetry install --with call_qa
 
 ```
+
+
+## Make database
+
+If you don't have FAISS index, you should create one.
+
+1. Load documents to "documents" folder in your project.
+2. Run `poetry run python src/qa-service/init_db.py`

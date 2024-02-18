@@ -110,7 +110,7 @@ async def predict(
 async def healthcheck():
     current_time = datetime.now()
     msg = (f"Hey, hey! "
-           f"I've been alive for {current_time - launch_time} seconds now.\n")
+           f"I've been alive for {current_time - launch_time} now.\n")
 
     return {"message": msg}
 
