@@ -6,7 +6,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import Docx2txtLoader
 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain_core.embeddings import Embeddings
 from langchain_core.documents.base import Document
 from tqdm import tqdm
 
