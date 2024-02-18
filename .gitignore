@@ -171,3 +171,6 @@ notebooks/*
 
 # db faiss
 faiss-index/
+
+# config files
+*.yaml

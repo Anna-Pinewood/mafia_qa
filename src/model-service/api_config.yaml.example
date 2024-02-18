@@ -1,0 +1,3 @@
+model_name: "<transformers-model-name>"
+api_port: "<api-port>"
+debug: false
