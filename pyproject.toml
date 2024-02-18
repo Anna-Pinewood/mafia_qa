@@ -9,6 +9,7 @@ packages = [{include = "mafia_qa"}]
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
 fastapi = "^0.109.2"
+uvicorn = "^0.27.1"
 
 [tool.poetry.group.call_qa]
 optional = true
@@ -31,6 +32,8 @@ optional = true
 
 [tool.poetry.group.model.dependencies]
 transformers = "^4.37.2"
+torch = "^2.2.0"
+accelerate = "^0.27.2"
 
 
 
