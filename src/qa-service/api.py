@@ -7,14 +7,19 @@ from pathlib import Path
 import requests
 import uvicorn
 import yaml
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile
 from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
+from langchain.schema.document import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from ast import literal_eval
+
 
 from consts import (CONTEXT_PROMPT, EMBEDDINGS_MODEL_NAME, FAISS_INDEX_PATH,
                     MAX_TOKENS_ANSWER, MODEL_URL, SYSTEM_PROMPT, TEMPERATURE,
                     TOP_K_DOCUMENTS)
 from script_utils import get_kwargs, get_logger
+from init_db import prepare_splits
 
 app = FastAPI(
     title=("MAFIA QA assistant api."),
@@ -77,6 +82,39 @@ async def answer(
                               url_out=MODEL_URL,
                               )
     return {'answer': answer}
+
+
+@app.post('/load_document')
+async def load_documents(
+        request: Request,
+):
+
+    ip_user = request.client.host
+    LOGGER.info("Received POST request to /load_document from IP: %s",
+                ip_user)
+    fragments_num = vectorstore.index_to_docstore_id.__len__()
+    LOGGER.info("Database now consists of %s fragments.", str(fragments_num))
+
+    data = await request.json()
+    documents = literal_eval(data.get("documents"))
+
+    documents_langchain = [Document(page_content=document)
+                           for document in documents]
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000, chunk_overlap=200)
+    splits = text_splitter.split_documents(documents_langchain)
+    
+    new_vectorstore = FAISS.from_documents(documents=splits,
+                                           embedding=embeddings)
+    vectorstore.merge_from(new_vectorstore)
+    vectorstore.save_local(FAISS_INDEX_PATH)
+    LOGGER.info("FAISS index was updated and saved to %s",
+                str(FAISS_INDEX_PATH))
+
+    fragments_num = vectorstore.index_to_docstore_id.__len__()
+    LOGGER.info("Database was enriched up to %s fragments.",
+                str(fragments_num))
+    return {"answer": "Succesfully loaded."}
 
 
 @app.get('/healthcheck')
