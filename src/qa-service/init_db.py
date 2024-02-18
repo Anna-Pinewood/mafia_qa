@@ -1,6 +1,4 @@
 """Creates vector db from document, if there is no VDB already."""
-
-from logging import getLogger
 from pathlib import Path
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -9,8 +7,8 @@ from langchain_community.embeddings.huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from tqdm import tqdm
 
+from consts import FAISS_INDEX_PATH
 from script_utils import get_kwargs, get_logger
-
 
 if __name__ == "__main__":
     kwargs = get_kwargs().parse_args()
@@ -18,7 +16,6 @@ if __name__ == "__main__":
 
     ROOT_DIR = Path(__file__).parent.parent.parent
     PATH_TO_DOCUMENTS = ROOT_DIR / "documents"
-    PATH_TO_INDEX = ROOT_DIR / "faiss-index"
 
     LOGGER.info("Embedding model is loading...")
     embeddings_model_name = 'sentence-transformers/distiluse-base-multilingual-cased-v1'
@@ -39,5 +36,5 @@ if __name__ == "__main__":
     LOGGER.info("Filling up FAISS db...")
     vectorstore = FAISS.from_documents(documents=splits,
                                        embedding=embeddings)
-    vectorstore.save_local(PATH_TO_INDEX)
-    LOGGER.info("FAISS index was saved to %s", str(PATH_TO_INDEX))
+    vectorstore.save_local(FAISS_INDEX_PATH)
+    LOGGER.info("FAISS index was saved to %s", str(FAISS_INDEX_PATH))

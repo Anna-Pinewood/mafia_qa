@@ -6,7 +6,7 @@ from pathlib import Path
 import torch
 import uvicorn
 import yaml
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Request
 from transformers import pipeline
 
 app = FastAPI(
@@ -19,20 +19,6 @@ app = FastAPI(
 LOGGER = getLogger(__name__)
 
 RUSSIAN_BEGIN_FOR_MODEL = ""
-
-
-async def predict_with_model(
-        query: str | None = None,
-        context: str | None = None,
-        system_prompt: str | None = None,
-        context_prompt: str | None = None,
-        max_new_tokens: int = 300,
-        temperature: float = 0,
-        top_k: int | None = None,
-        top_p: float | None = None
-) -> str:
-    answer = ...
-    return answer
 
 
 @app.post('/predict')
@@ -48,21 +34,17 @@ async def predict(
         ...
         'max_tokens': max_new_tokens,
         'temperature': temperature,
-        'top_p': top_p,
     }
     """
     LOGGER.info("\n\nGot request")
     data = await request.json()
 
-    model = data.get("model")
     query = data.get("query")
     context = data.get("context")
     system_prompt = data.get("system_prompt")
     context_prompt = data.get("context_prompt")
     max_tokens = data.get("max_tokens")
     temperature = data.get("temperature")
-    top_k = data.get("top_k")
-    top_p = data.get("top_p")
 
     messages = get_messages(question=query,
                             context=context,
@@ -85,16 +67,11 @@ async def predict(
     num_tokens_total = len(answer_pipeline.tokenizer(model_input)['input_ids'])
     LOGGER.debug("Num of tokens in model_input: %s", str(num_tokens_total))
 
-    top_k = top_k if top_k else None
-    top_p = top_p if top_p else None
-
     outputs = answer_pipeline(
         model_input,
         max_new_tokens=max_tokens,
         do_sample=False,
         temperature=temperature,
-        top_k=top_k,
-        top_p=top_p
     )
 
     text = outputs[0]["generated_text"]
@@ -110,7 +87,7 @@ async def predict(
 async def healthcheck():
     current_time = datetime.now()
     msg = (f"Hey, hey! "
-           f"I've been alive for {current_time - launch_time} now.\n")
+           f"I am LLM service and I've been alive for {current_time - launch_time} now.\n")
 
     return {"message": msg}
 
@@ -165,4 +142,4 @@ if __name__ == '__main__':
     launch_time = datetime.now()
 
     uvicorn.run(app, host="0.0.0.0",
-                port=config["api_port"], log_level="info", reload=False, use_colors=True)
+                port=config["api_port"], log_level="info", reload=config["reload"], use_colors=True)
